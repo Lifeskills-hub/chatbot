@@ -2,7 +2,7 @@ name: Deploy Chat App to GitHub Pages
 
 on:
   push:
-    branches: [ main ] # Change to 'master' if your default branch is master
+    branches: [ main ] # Change to 'master' if your repository's default branch is master
 
 permissions:
   contents: read
@@ -17,9 +17,15 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Inject API Key into HTML
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          # Replaces the placeholder string with your GitHub Secret value
-          sed -i 's/__GEMINI_API_KEY__/${{ secrets.GEMINI_API_KEY }}/g' index.html
+          node -e "
+            const fs = require('fs');
+            let content = fs.readFileSync('index.html', 'utf8');
+            content = content.replace(/__GEMINI_API_KEY__/g, process.env.GEMINI_API_KEY || '');
+            fs.writeFileSync('index.html', content);
+          "
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
